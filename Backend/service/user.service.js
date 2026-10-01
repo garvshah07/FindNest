@@ -26,7 +26,7 @@ const createdUser = async (data) => {
       lastname: data.lastname,
       email: data.email,
       password: hasedPassword,
-      accounttype: data.accounttype,
+     
     };
 
     const createdUser = await User.create(createUser);
@@ -52,7 +52,6 @@ const loginUser = async (email, password) => {
         {
           firstname: user.firstname,
           email: user.email,
-          accounttype: user.accounttype,
         },
         token_key,
         { expiresIn: "1h" },
@@ -72,7 +71,7 @@ const updateUser = async (updatedData, id) => {
     updatedLastName,
     updatedEmail,
     updatedPassword,
-    updatedAccounntType,
+   
   } = updatedData;
 
   const updatedHashedPassword = await hash(updatedPassword, 10);
@@ -82,7 +81,6 @@ const updateUser = async (updatedData, id) => {
     lastname: updatedLastName,
     email: updatedEmail,
     password: updatedHashedPassword,
-    accounttype: updatedAccounntType,
   };
 
   try {

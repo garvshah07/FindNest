@@ -13,7 +13,7 @@ const app = express();
 
 app.use(express.json());
 
-const allowedOrigins = ["https://localhost:3000", "http://localhost:5375"];
+const allowedOrigins = ["https://localhost:3000", "http://localhost:5173"];
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -25,6 +25,8 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
