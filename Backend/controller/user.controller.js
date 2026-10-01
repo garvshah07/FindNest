@@ -1,49 +1,95 @@
-import { getAllUser, createdUser, loginUser } from "../service/user.service.js";
-import User from "../model/user.model.js"
+import {
+  getAllUsers,
+  createdUser,
+  loginUser,
+  updateUser,
+  deleteUser,
+} from "../service/user.service.js";
+import User from "../model/user.model.js";
 
-const getAllUserDetails = async (req, res) => {
+const getAllUsersController = async (req, res) => {
   try {
-    const users = await getAllUser();
-    res.status(200).send({ message: "Users Fetched", users: users });
+    const users = await getAllUsers();
+    res.status(200).json({ message: "Users Fetched", users: users });
   } catch (error) {
-    res.status(400).send({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
-const createUser = async (req, res) => {
+const createUserController = async (req, res) => {
   const { firstname, lastname, email, password, accounttype } = req.body;
   try {
-
-    const user = await User.findOne({ email: email })
+    const user = await User.findOne({ email: email });
 
     if (!user) {
-
-      const data = { firstname, lastname, email, password, accounttype }
+      const data = { firstname, lastname, email, password, accounttype };
 
       await createdUser(data);
-      res.status(200).send({ message: "User Created" });
+      res.status(200).json({ message: "User Created" });
     } else {
-      res.staus(404).send({ message: "User Exist" })
+      res.status(404).json({ message: "User Is Allready Exist" });
     }
   } catch (error) {
-    res.status(400).send({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
-const logedinUser = async (req, res) => {
+const logedinUserController = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const data = { email, password }
-
     if (email === "" && password === "") {
-      res.status(400).send({ message: "Enter the Email & Password" });
+      res.status(400).json({ message: "Enter the Email & Password" });
     } else {
-      await loginUser(data)
+      const token = await loginUser(email, password);
+      res.status(200).json({ message: "User Login Successfuly", token: token });
     }
   } catch (error) {
-    res.status(400).send({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
-}
+};
 
-export { getAllUserDetails, createUser, logedinUser };
+const updateUserController = async (req, res) => {
+  const {
+    updatedFirstName,
+    updatedLastName,
+    updatedEmail,
+    updatedPassword,
+    updatedAccounntType,
+  } = req.body;
+
+  const { id } = req.params;
+
+  const updatedData = {
+    updatedFirstName,
+    updatedLastName,
+    updatedEmail,
+    updatedPassword,
+    updatedAccounntType,
+  };
+
+  await updateUser(updatedData, id);
+  res.status(200).json({ messgae: "User Data Updated" });
+  try {
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const deleteUserController = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await deleteUser(id);
+    res.status(200).json({ message: "User Deleted Succesfully" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export {
+  getAllUsersController,
+  createUserController,
+  logedinUserController,
+  updateUserController,
+  deleteUserController,
+};
