@@ -17,12 +17,12 @@ const getAllUsersController = async (req, res) => {
 };
 
 const createUserController = async (req, res) => {
-  const { firstname, lastname, email, password } = req.body;
+  const { firstname, lastname, email, password, role } = req.body;
   try {
     const user = await User.findOne({ email: email });
 
     if (!user) {
-      const data = { firstname, lastname, email, password };
+      const data = { firstname, lastname, email, password, role };
 
       await createdUser(data);
       res.status(200).json({ message: "User Created" });
@@ -55,6 +55,7 @@ const updateUserController = async (req, res) => {
     updatedLastName,
     updatedEmail,
     updatedPassword,
+    updatedRole,
   } = req.body;
 
   const { id } = req.params;
@@ -64,6 +65,7 @@ const updateUserController = async (req, res) => {
     updatedLastName,
     updatedEmail,
     updatedPassword,
+    updatedRole,
   };
 
   await updateUser(updatedData, id);
