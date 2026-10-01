@@ -1,4 +1,5 @@
-import { getAllUser, createdUser } from "../service/user.service.js";
+import { getAllUser, createdUser, loginUser } from "../service/user.service.js";
+import User from "../model/user.model.js"
 
 const getAllUserDetails = async (req, res) => {
   try {
@@ -10,15 +11,39 @@ const getAllUserDetails = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-  const { firstname, lastname, email, password, mode } = req.body;
-
-  const data = { firstname, lastname, email, password, mode };
+  const { firstname, lastname, email, password, accounttype } = req.body;
   try {
-    await createdUser(data);
-    res.status(200).send({ message: "User Created" });
+
+    const user = await User.findOne({ email: email })
+
+    if (!user) {
+
+      const data = { firstname, lastname, email, password, accounttype }
+
+      await createdUser(data);
+      res.status(200).send({ message: "User Created" });
+    } else {
+      res.staus(404).send({ message: "User Exist" })
+    }
   } catch (error) {
     res.status(400).send({ message: error.message });
   }
 };
 
-export { getAllUserDetails, createUser };
+const logedinUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const data = { email, password }
+
+    if (email === "" && password === "") {
+      res.status(400).send({ message: "Enter the Email & Password" });
+    } else {
+      await loginUser(data)
+    }
+  } catch (error) {
+    res.status(400).send({ message: error.message });
+  }
+}
+
+export { getAllUserDetails, createUser, logedinUser };
