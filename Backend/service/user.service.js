@@ -1,8 +1,10 @@
 import User from "../model/user.model.js";
-import { genSalt, hash, compare } from "bcryptjs";
+import { hash, compare } from "bcryptjs";
 import pkg from 'jsonwebtoken';
 const { sign } = pkg;
+import { configDotenv } from "dotenv";
 
+configDotenv()
 
 const token_key = process.env.JWT_KEY
 
@@ -41,14 +43,14 @@ const loginUser = async (data) => {
   try {
     const user = await User.findOne({ email: data.email });
 
-    const isMatch = compare(data.password, user.password)
+    const isMatch = await compare(data.password, user.password)
 
     if (isMatch) {
       const token = sign({
         "firstname": user.firstname,
         "email": user.email,
         "accounttype": user.accounttype
-      }, JWT_KEY, { expiresIn: "1h" })
+      }, token_key, { expiresIn: "1h" })
 
       return token
     } else {
