@@ -1,0 +1,177 @@
+import User from "../model/user.model.js";
+import { hash, compare } from "bcryptjs";
+import { configDotenv } from "dotenv";
+import jwt from "jsonwebtoken";
+import { Resend } from "resend";
+
+configDotenv();
+
+const token_key = process.env.JWT_KEY;
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const getAllUsers = async () => {
+  try {
+    const users = await User.find();
+    return users;
+  } catch (error) {
+    throw new Error("Error Message: " + error.message);
+  }
+};
+
+const createdUser = async (data) => {
+  try {
+    const hasedPassword = await hash(data.password, 10);
+
+    const createUser = {
+      firstname: data.firstname,
+      lastname: data.lastname,
+      email: data.email,
+      password: hasedPassword,
+      role: data.role || "User",
+    };
+
+    const createdUser = await User.create(createUser);
+
+    return createdUser;
+  } catch (error) {
+    throw new Error("Error Message: " + error.message);
+  }
+};
+
+const loginUser = async (email, password) => {
+  try {
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+      throw new Error("User Not Found");
+    }
+
+    const isMatch = await compare(password, user.password);
+
+    if (isMatch) {
+      const token = jwt.sign(
+        {
+          firstname: user.firstname,
+          email: user.email,
+          role: user.role,
+        },
+        token_key,
+        { expiresIn: "1h" },
+      );
+      return token;
+    } else {
+      throw new Error("Invalid Credential");
+    }
+  } catch (error) {
+    throw new Error("Error Message: " + error.message);
+  }
+};
+
+const updateUser = async (updatedData, id) => {
+  const {
+    updatedFirstName,
+    updatedLastName,
+    updatedEmail,
+    updatedPassword,
+    updatedRole,
+  } = updatedData;
+
+  const updatedHashedPassword = await hash(updatedPassword, 10);
+
+  const updateData = {
+    firstname: updatedFirstName,
+    lastname: updatedLastName,
+    email: updatedEmail,
+    password: updatedHashedPassword,
+    role: updatedRole,
+  };
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true },
+    );
+
+    return user;
+  } catch (error) {
+    throw new Error("Error Message: " + error.message);
+  }
+};
+
+const deleteUser = async (id) => {
+  try {
+    const user = await User.findOne({ _id: id });
+
+    if (!user) {
+      throw new Error("User Not Found");
+    }
+
+    const deletedUser = await User.deleteOne({ _id: id });
+
+    return deletedUser;
+  } catch (error) {
+    throw new Error("Error Message: " + error.message);
+  }
+};
+
+const sendPasswordResetOTP = async (email, otp) => {
+  const { data, error } = await resend.emails.send({
+    from: process.env.MAIL_FROM,
+    to: [email],
+    subject: "Your password reset OTP",
+
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <body style="font-family: Arial, sans-serif;">
+          <div style="max-width: 500px; margin: auto; padding: 30px;">
+            
+            <h2>Password Reset</h2>
+
+            <p>
+              We received a request to reset your password.
+            </p>
+
+            <p>
+              Your verification code is:
+            </p>
+
+            <div style="
+              font-size: 32px;
+              font-weight: bold;
+              letter-spacing: 8px;
+              margin: 25px 0;
+            ">
+              ${otp}
+            </div>
+
+            <p>
+              This OTP will expire in <strong>10 minutes</strong>.
+            </p>
+
+            <p>
+              If you did not request a password reset,
+              you can safely ignore this email.
+            </p>
+
+          </div>
+        </body>
+      </html>
+    `,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+export {
+  getAllUsers,
+  createdUser,
+  loginUser,
+  updateUser,
+  deleteUser,
+  sendPasswordResetOTP,
+};
