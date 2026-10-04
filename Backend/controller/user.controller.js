@@ -22,19 +22,12 @@ const getAllUsersController = async (req, res) => {
 };
 
 const createUserController = async (req, res) => {
-  const { firstname, lastname, email, confirmPassword, password, role } =
-    req.body;
+  const { firstname, lastname, email, password, role } = req.body;
+
   try {
     const user = await User.findOne({ email: email });
 
     if (!user) {
-      if (password !== confirmPassword) {
-        res
-          .status(400)
-          .json({ message: "Password and Confirm Password do not match" });
-        return;
-      }
-
       const data = { firstname, lastname, email, password, role };
 
       await createdUser(data);
@@ -68,18 +61,10 @@ const updateUserController = async (req, res) => {
     updatedLastName,
     updatedEmail,
     updatedPassword,
-    confirmPassword,
     updatedRole,
   } = req.body;
 
   const { id } = req.params;
-
-  if (updatedPassword !== confirmPassword) {
-    res
-      .status(400)
-      .json({ message: "Password and Confirm Password do not match" });
-    return;
-  }
 
   const updatedData = {
     updatedFirstName,
@@ -183,7 +168,6 @@ const verifyOTPController = async (req, res) => {
       });
     }
 
-    
     if (resetRequest.attempts >= 5) {
       await PasswordReset.deleteOne({
         _id: resetRequest._id,
@@ -197,7 +181,6 @@ const verifyOTPController = async (req, res) => {
     resetRequest.attempts += 1;
 
     const submittedHash = hashOTP(otp);
-
 
     if (submittedHash !== resetRequest.otpHash) {
       await resetRequest.save();

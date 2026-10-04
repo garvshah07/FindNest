@@ -1,9 +1,8 @@
 import "./App.css";
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { RouterProvider } from "react-router";
-import Login from "./component/Login";
-import Signup from "./component/Signup";
-import ForgotPassword from "./component/ForgotPassword";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
 
 const router = createBrowserRouter([
   {
