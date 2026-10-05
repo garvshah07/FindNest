@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import cors from "cors";
 import userRouter from "../Backend/router/user.router.js";
+import propertyRouter from "../Backend/router/property.router.js"
+import { authenticate } from "../Backend/middleware/auth.middleware.js"
 
 dotenv.config();
 
@@ -17,6 +19,7 @@ const allowedOrigins = ["https://localhost:3000", "http://localhost:5173"];
 
 const corsOptions = {
   origin: function (origin, callback) {
+    
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -41,3 +44,5 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/user", userRouter);
+
+app.use("/api/property", authenticate , propertyRouter);
