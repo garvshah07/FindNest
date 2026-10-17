@@ -1,19 +1,46 @@
-# React + Vite
+# FindNest Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the React frontend for FindNest. The backend is a separate project and
+is not part of this folder.
 
-Currently, two official plugins are available:
+## Folder structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```text
+src/
+  App.jsx                 # All frontend routes (createBrowserRouter)
+  main.jsx                # Starts React
+  index.css               # Global styles
+  components/             # Reusable pieces used by multiple pages
+  pages/                  # Full screens shown by the routes
+```
 
-## React Compiler
+The app uses React Router's `createBrowserRouter` and `RouterProvider`.
+Open `src/App.jsx` to see every route.
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Routes
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
+Routes are defined in `src/App.jsx`:
 
-## Expanding the ESLint configuration
+| URL | Page | Purpose |
+| --- | --- | --- |
+| `/login` | `Login.jsx` | Sign in |
+| `/signup` | `Signup.jsx` | Create an account |
+| `/forgot-password` | `ForgotPassword.jsx` | Reset a password |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The `/` URL and unknown URLs redirect to `/login`.
+
+## Run the frontend
+
+From this folder:
+
+```bash
+npm install
+npm run dev
+```
+
+Useful commands:
+
+```bash
+npm run lint
+npm run build
+```

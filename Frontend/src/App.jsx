@@ -1,9 +1,14 @@
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import "./App.css";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import ForgotPassword from "./pages/ForgotPassword";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
 
+// Keep all page routes in one place so they are easy to find and change.
 const router = createBrowserRouter([
   {
     path: "/",
@@ -27,8 +32,6 @@ const router = createBrowserRouter([
   },
 ]);
 
-function App() {
+export default function App() {
   return <RouterProvider router={router} />;
 }
-
-export default App;
