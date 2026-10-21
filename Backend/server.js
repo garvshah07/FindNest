@@ -19,6 +19,7 @@ const allowedOrigins = [
   "https://localhost:3000",
   "http://localhost:5173",
   "find-nest-vert.vercel.app",
+  "https://findnest-s6tc.onrender.com",
 ];
 
 const corsOptions = {
