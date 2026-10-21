@@ -1,12 +1,16 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import AlertMessage from "../components/AlertMessage";
 import AuthLayout from "../components/AuthLayout";
 import { LockIcon, MailIcon, UserIcon } from "../components/Icons";
 import InputField from "../components/InputField";
 import PasswordStrength from "../components/PasswordStrength";
+import { clearAuthError, signup } from "../redux/actions";
 
 export default function Signup() {
+  const dispatch = useDispatch();
+  const { error, loading } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const [form, setForm] = useState({
     firstname: "",
@@ -17,12 +21,12 @@ export default function Signup() {
     agreeTerms: false,
   });
   const [message, setMessage] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   function updateField(event) {
     const { name, value, type, checked } = event.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });
     setMessage(null);
+    if (error) dispatch(clearAuthError());
   }
 
   function validateForm() {
@@ -48,40 +52,20 @@ export default function Signup() {
       return;
     }
 
-    setIsLoading(true);
     setMessage(null);
 
     try {
-      const response = await fetch("http://localhost:3000/api/user/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstname: form.firstname,
-          lastname: form.lastname,
-          email: form.email,
-          password: form.password,
-          role: "User",
-        }),
-      });
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        setMessage({
-          type: "error",
-          text: data?.message || "Could not create the account.",
-        });
-        return;
-      }
-
+      await dispatch(signup({
+        firstname: form.firstname,
+        lastname: form.lastname,
+        email: form.email,
+        password: form.password,
+        role: "User",
+      }));
       setMessage({ type: "success", text: "Account created. Redirecting to login..." });
       setTimeout(() => navigate("/login"), 1200);
     } catch {
-      setMessage({
-        type: "error",
-        text: "Cannot connect to FindNest. Please start the backend and try again.",
-      });
-    } finally {
-      setIsLoading(false);
+      // The thunk stores the API error in Redux for rendering.
     }
   }
 
@@ -91,7 +75,7 @@ export default function Signup() {
       subtitle="Use one account to buy, sell, or rent properties."
       activePage="signup"
     >
-      <AlertMessage type={message?.type} message={message?.text} />
+      <AlertMessage type={message?.type} message={message?.text || error} />
 
       <form className="form" onSubmit={handleSubmit}>
         <div className="form-row">
@@ -162,8 +146,8 @@ export default function Signup() {
           I agree to the terms and privacy policy.
         </label>
 
-        <button className="button" type="submit" disabled={isLoading}>
-          {isLoading ? "Creating account..." : "Create account"}
+        <button className="button" type="submit" disabled={loading}>
+          {loading ? "Creating account..." : "Create account"}
         </button>
       </form>
 

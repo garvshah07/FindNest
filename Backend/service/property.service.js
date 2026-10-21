@@ -1,38 +1,59 @@
-import Property from "../model/property.model.js"
+import Property from "../model/property.model.js";
 
 const getAllProperties = async () => {
-    try {
-      const properties = await Property.find();
-      return properties;
-    } catch (error) {
-      throw new Error("Error Message: " + error.message);
-    }
-  };
+  try {
+    return await Property.find();
+  } catch (error) {
+    throw new Error("Error Message: " + error.message);
+  }
+};
 
 const createdProperty = async (data) => {
-    try {
+  try {
+    const existingProperty = await Property.findOne({
+      latitude: data.latitude?.trim(),
+      longitude: data.longitude?.trim(),
+      propertyfor: data.propertyfor?.trim(),
+    });
 
-
-        const existingProperty = await Property.findOne({
-            latitude: data.latitude.trim(),
-            longitude: data.longitude.trim(),
-            propertyfor: data.propertyfor.trim()
-          });
-      
-         
-          if (existingProperty) {
-            return res.status(400).json({ 
-              message: `This property is already listed for the ${existingProperty.propertyfor}.`
-            });
-          }
-        
-        const createdProperty = await Property.create(data)
-
-        return createdProperty
-        
-    } catch (error) {
-        throw new Error("Error Message: " + error.message)
+    if (existingProperty) {
+      throw new Error(
+        `This property is already listed for the ${existingProperty.propertyfor}.`,
+      );
     }
-  }
 
-export {getAllProperties , createdProperty}
+    return await Property.create(data);
+  } catch (error) {
+    throw new Error("Error Message: " + error.message);
+  }
+};
+
+const updateProperty = async (id, data) => {
+  try {
+    const updated = await Property.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { new: true }
+    );
+    if (!updated) {
+      throw new Error("Property not found");
+    }
+    return updated;
+  } catch (error) {
+    throw new Error("Error Message: " + error.message);
+  }
+};
+
+const deleteProperty = async (id) => {
+  try {
+    const deleted = await Property.findByIdAndDelete(id);
+    if (!deleted) {
+      throw new Error("Property not found");
+    }
+    return deleted;
+  } catch (error) {
+    throw new Error("Error Message: " + error.message);
+  }
+};
+
+export { getAllProperties, createdProperty, updateProperty, deleteProperty };

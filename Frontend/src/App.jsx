@@ -7,12 +7,35 @@ import "./App.css";
 import ForgotPassword from "./pages/ForgotPassword";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Home from "./pages/Home";
+import Admin from "./pages/Admin";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-// Keep all page routes in one place so they are easy to find and change.
+function RootRedirect() {
+  const token = localStorage.getItem("token");
+  return <Navigate to={token ? "/home" : "/login"} replace />;
+}
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate to="/login" replace />,
+    element: <RootRedirect />,
+  },
+  {
+    path: "/home",
+    element: (
+      <ProtectedRoute>
+        <Home />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute>
+        <Admin />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/login",
@@ -28,7 +51,7 @@ const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <Navigate to="/login" replace />,
+    element: <RootRedirect />,
   },
 ]);
 

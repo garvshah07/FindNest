@@ -44,8 +44,8 @@ const logedinUserController = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (email === "" && password === "") {
-      res.status(400).json({ message: "Enter the Email & Password" });
+    if (!email?.trim() || !password) {
+      return res.status(400).json({ message: "Enter the Email & Password" });
     } else {
       const token = await loginUser(email, password);
       res.status(200).json({ message: "User Login Successfuly", token: token });
@@ -56,27 +56,9 @@ const logedinUserController = async (req, res) => {
 };
 
 const updateUserController = async (req, res) => {
-  const {
-    updatedFirstName,
-    updatedLastName,
-    updatedEmail,
-    updatedPassword,
-    updatedRole,
-  } = req.body;
-
-  const { id } = req.params;
-
-  const updatedData = {
-    updatedFirstName,
-    updatedLastName,
-    updatedEmail,
-    updatedPassword,
-    updatedRole,
-  };
-
-  await updateUser(updatedData, id);
-  res.status(200).json({ messgae: "User Data Updated" });
   try {
+    const user = await updateUser(req.body, req.params.id);
+    res.status(200).json({ message: "User Data Updated", user });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -93,46 +75,40 @@ const deleteUserController = async (req, res) => {
 };
 
 const forgotPasswordController = async (req, res) => {
-  const email = req.body.email?.trim().toLowerCase();
+  try {
+    const email = req.body.email?.trim().toLowerCase();
 
-  if (!email) {
-    return res.status(400).json({
-      message: "Email is required",
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(200).json({
+        message: "If an account exists with this email, an OTP has been sent.",
+      });
+    }
+
+    const otp = generateOTP();
+    const otpHash = hashOTP(otp);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await PasswordReset.deleteMany({ email });
+    await PasswordReset.create({
+      email,
+      otpHash,
+      expiresAt,
+      attempts: 0,
+      verified: false,
     });
-  }
+    await sendPasswordResetOTP(email, otp);
 
-  const user = await User.findOne({ email });
-
-  if (!user) {
     return res.status(200).json({
       message: "If an account exists with this email, an OTP has been sent.",
     });
-  }
-
-  const otp = generateOTP();
-
-  const otpHash = hashOTP(otp);
-
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-  await PasswordReset.deleteMany({ email });
-
-  await PasswordReset.create({
-    email,
-    otpHash,
-    expiresAt,
-    attempts: 0,
-    verified: false,
-  });
-
-  await sendPasswordResetOTP(email, otp);
-
-  return res.status(200).json({
-    message: "If an account exists with this email, an OTP has been sent.",
-  });
-  try {
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 

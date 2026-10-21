@@ -1,58 +1,45 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import AlertMessage from "../components/AlertMessage";
 import AuthLayout from "../components/AuthLayout";
 import { LockIcon, MailIcon } from "../components/Icons";
 import InputField from "../components/InputField";
+import { clearAuthError, login } from "../redux/actions";
 
 export default function Login() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { error, loading, token } = useSelector((state) => state.auth);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [message, setMessage] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (token) {
+      navigate("/home", { replace: true });
+    }
+  }, [token, navigate]);
 
   function clearMessage() {
-    if (message) setMessage(null);
+    if (error) dispatch(clearAuthError());
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
     if (!email.trim() || !password.trim()) {
-      setMessage({ type: "error", text: "Please enter your email and password." });
+      dispatch({ type: "auth/failure", payload: "Please enter your email and password." });
       return;
     }
 
-    setIsLoading(true);
-    setMessage(null);
-
     try {
-      const response = await fetch("http://localhost:3000/api/user/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        setMessage({
-          type: "error",
-          text: data?.message || "The email or password is incorrect.",
-        });
-        return;
-      }
-
-      if (data?.token) localStorage.setItem("token", data.token);
+      const data = await dispatch(login({ email, password }));
       if (rememberMe) localStorage.setItem("rememberMe", "true");
-      setMessage({ type: "success", text: data?.message || "Welcome back!" });
+      if (data?.token) localStorage.setItem("token", data.token);
+      navigate("/home");
     } catch {
-      setMessage({
-        type: "error",
-        text: "Cannot connect to FindNest. Please start the backend and try again.",
-      });
-    } finally {
-      setIsLoading(false);
+      // The thunk stores the API error in Redux for rendering.
     }
   }
 
@@ -62,7 +49,7 @@ export default function Login() {
       subtitle="Sign in to buy, sell, or rent verified properties."
       activePage="login"
     >
-      <AlertMessage type={message?.type} message={message?.text} />
+      <AlertMessage type="error" message={error} />
 
       <form className="form" onSubmit={handleSubmit}>
         <InputField
@@ -106,8 +93,8 @@ export default function Login() {
           Remember this device
         </label>
 
-        <button className="button" type="submit" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign in"}
+        <button className="button" type="submit" disabled={loading}>
+          {loading ? "Signing in..." : "Sign in"}
         </button>
       </form>
 

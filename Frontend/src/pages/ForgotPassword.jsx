@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import AlertMessage from "../components/AlertMessage";
 import AuthLayout from "../components/AuthLayout";
 import { LockIcon, MailIcon } from "../components/Icons";
 import InputField from "../components/InputField";
+import {
+  requestPasswordReset,
+  resetPassword as resetPasswordRequest,
+  verifyPasswordResetOtp,
+} from "../redux/actions";
 
 export default function ForgotPassword() {
+  const dispatch = useDispatch();
+  const { error, loading, resetToken } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
@@ -14,7 +22,6 @@ export default function ForgotPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(45);
   const [message, setMessage] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (step !== 2 || secondsLeft === 0) return undefined;
@@ -26,36 +33,38 @@ export default function ForgotPassword() {
     setMessage({ type: "error", text });
   }
 
-  function finishAfterDelay(nextStep, text) {
-    setIsLoading(true);
-    setMessage(null);
-    setTimeout(() => {
-      setStep(nextStep);
-      setMessage({ type: "success", text });
-      setIsLoading(false);
-    }, 600);
-  }
-
-  function requestCode(event) {
+  async function requestCode(event) {
     event.preventDefault();
     if (!email.trim()) {
       showError("Please enter your email address.");
       return;
     }
-    finishAfterDelay(2, `A verification code was sent to ${email}.`);
-    setSecondsLeft(45);
+    try {
+      const data = await dispatch(requestPasswordReset(email.trim()));
+      setStep(2);
+      setMessage({ type: "success", text: data.message });
+      setSecondsLeft(45);
+    } catch {
+      // The thunk stores the API error in Redux for rendering.
+    }
   }
 
-  function verifyCode(event) {
+  async function verifyCode(event) {
     event.preventDefault();
     if (code.length !== 6) {
       showError("Please enter the complete 6-digit code.");
       return;
     }
-    finishAfterDelay(3, "Code verified. Choose a new password.");
+    try {
+      await dispatch(verifyPasswordResetOtp({ email, otp: code }));
+      setStep(3);
+      setMessage({ type: "success", text: "Code verified. Choose a new password." });
+    } catch {
+      // The thunk stores the API error in Redux for rendering.
+    }
   }
 
-  function resetPassword(event) {
+  async function resetPassword(event) {
     event.preventDefault();
     if (newPassword.length < 8) {
       showError("Your new password must have at least 8 characters.");
@@ -65,7 +74,13 @@ export default function ForgotPassword() {
       showError("The passwords do not match.");
       return;
     }
-    finishAfterDelay(4, "");
+    try {
+      await dispatch(resetPasswordRequest({ resetToken, newPassword }));
+      setStep(4);
+      setMessage(null);
+    } catch {
+      // The thunk stores the API error in Redux for rendering.
+    }
   }
 
   const titles = [
@@ -92,7 +107,7 @@ export default function ForgotPassword() {
         </div>
       )}
 
-      <AlertMessage type={message?.type} message={message?.text} />
+      <AlertMessage type={message?.type || "error"} message={message?.text || error} />
 
       {step === 1 && (
         <form className="form" onSubmit={requestCode}>
@@ -106,8 +121,8 @@ export default function ForgotPassword() {
             icon={<MailIcon />}
             required
           />
-          <button className="button" type="submit" disabled={isLoading}>
-            {isLoading ? "Sending..." : "Send verification code"}
+          <button className="button" type="submit" disabled={loading}>
+            {loading ? "Sending..." : "Send verification code"}
           </button>
         </form>
       )}
@@ -132,8 +147,8 @@ export default function ForgotPassword() {
               ? `You can request another code in ${secondsLeft}s.`
               : "You can request another code now."}
           </p>
-          <button className="button" type="submit" disabled={isLoading}>
-            {isLoading ? "Checking..." : "Verify code"}
+          <button className="button" type="submit" disabled={loading}>
+            {loading ? "Checking..." : "Verify code"}
           </button>
         </form>
       )}
@@ -160,8 +175,8 @@ export default function ForgotPassword() {
             icon={<LockIcon />}
             required
           />
-          <button className="button" type="submit" disabled={isLoading}>
-            {isLoading ? "Updating..." : "Update password"}
+          <button className="button" type="submit" disabled={loading}>
+            {loading ? "Updating..." : "Update password"}
           </button>
         </form>
       )}

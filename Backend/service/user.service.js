@@ -68,23 +68,20 @@ const loginUser = async (email, password) => {
 };
 
 const updateUser = async (updatedData, id) => {
-  const {
-    updatedFirstName,
-    updatedLastName,
-    updatedEmail,
-    updatedPassword,
-    updatedRole,
-  } = updatedData;
+  const firstName = updatedData.updatedFirstName ?? updatedData.firstname;
+  const lastName = updatedData.updatedLastName ?? updatedData.lastname;
+  const email = updatedData.updatedEmail ?? updatedData.email;
+  const password = updatedData.updatedPassword ?? updatedData.password;
+  const role = updatedData.updatedRole ?? updatedData.role;
 
-  const updatedHashedPassword = await hash(updatedPassword, 10);
-
-  const updateData = {
-    firstname: updatedFirstName,
-    lastname: updatedLastName,
-    email: updatedEmail,
-    password: updatedHashedPassword,
-    role: updatedRole,
-  };
+  const updateData = {};
+  if (firstName !== undefined) updateData.firstname = firstName;
+  if (lastName !== undefined) updateData.lastname = lastName;
+  if (email !== undefined) updateData.email = email;
+  if (role !== undefined) updateData.role = role;
+  if (password && password.trim()) {
+    updateData.password = await hash(password, 10);
+  }
 
   try {
     const user = await User.findByIdAndUpdate(
@@ -116,8 +113,10 @@ const deleteUser = async (id) => {
 };
 
 const sendPasswordResetOTP = async (email, otp) => {
+  const mailFrom = process.env.MAIL_FROM?.trim() || "onboarding@resend.dev";
+
   const { data, error } = await resend.emails.send({
-    from: process.env.MAIL_FROM,
+    from: mailFrom,
     to: [email],
     subject: "Your password reset OTP",
 
