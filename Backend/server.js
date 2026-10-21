@@ -18,7 +18,7 @@ app.use(express.json());
 const allowedOrigins = [
   "https://localhost:3000",
   "http://localhost:5173",
-  "find-nest-vert.vercel.app",
+  "https://find-nest-ten.vercel.app",
   "https://findnest-s6tc.onrender.com",
 ];
 
